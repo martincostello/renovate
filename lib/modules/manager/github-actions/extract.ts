@@ -8,6 +8,7 @@ import { GithubReleasesDatasource } from '../../datasource/github-releases';
 import { GithubRunnersDatasource } from '../../datasource/github-runners';
 import { GithubTagsDatasource } from '../../datasource/github-tags';
 import * as dockerVersioning from '../../versioning/docker';
+import * as dotnetSdkVersioning from '../../versioning/dotnet-sdk';
 import * as nodeVersioning from '../../versioning/node';
 import * as npmVersioning from '../../versioning/npm';
 import { getDep } from '../dockerfile/extract';
@@ -175,11 +176,11 @@ function extractRunner(runner: string): PackageDependency | null {
 }
 
 const versionedActions: Record<string, string> = {
+  dotnet: dotnetSdkVersioning.id,
   go: npmVersioning.id,
   node: nodeVersioning.id,
   python: npmVersioning.id,
   // Not covered yet because they use different datasources/packageNames:
-  // - dotnet
   // - java
 };
 

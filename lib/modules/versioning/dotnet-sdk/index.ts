@@ -4,22 +4,14 @@ import {
   coerceFloatingComponent,
   getFloatingRangeLowerBound,
   matches,
-  rangeToString,
   tryBump,
 } from './range';
-import type {
-  NugetBracketRange,
-  NugetFloatingRange,
-  NugetVersion,
-} from './types';
+import type { DotnetSdkFloatingRange, DotnetSdkVersion } from './types';
 import { compare, versionToString } from './version';
 
 export const id = 'nuget';
 export const displayName = 'NuGet';
-export const urls = [
-  'https://learn.microsoft.com/nuget/concepts/package-versioning',
-  'https://nugettools.azurewebsites.net/',
-];
+export const urls = ['https://learn.microsoft.com/dotnet/core/versions/'];
 export const supportsRanges = true;
 export const supportedRangeStrategies = ['pin', 'bump'];
 
@@ -31,10 +23,10 @@ class NugetVersioningApi implements VersioningApi {
   isSingleVersion(version: string): boolean {
     const r = parseRange(version);
     if (!r) {
-      return false;
+      return parseVersion(version) !== null;
     }
 
-    return r.type === 'nuget-exact-range';
+    return r.type !== 'dotnet-sdk-floating-range';
   }
 
   isStable(version: string): boolean {
@@ -44,11 +36,11 @@ class NugetVersioningApi implements VersioningApi {
     }
 
     const r = parseRange(version);
-    if (!r || r.type !== 'nuget-exact-range') {
+    if (!r) {
       return false;
     }
 
-    return !r.version.prerelease;
+    return !r.prerelease;
   }
 
   isValid(input: string): boolean {
@@ -141,23 +133,6 @@ class NugetVersioningApi implements VersioningApi {
       return false;
     }
 
-    if (r.type === 'nuget-exact-range') {
-      return compare(v, r.version) < 0;
-    }
-
-    if (r.type === 'nuget-bracket-range') {
-      if (!r.min) {
-        return false;
-      }
-
-      const minBound =
-        r.min.type === 'nuget-version'
-          ? r.min
-          : getFloatingRangeLowerBound(r.min);
-      const cmp = compare(v, minBound);
-      return r.minInclusive ? cmp < 0 : cmp <= 0;
-    }
-
     const minBound = getFloatingRangeLowerBound(r);
     return compare(v, minBound) < 0;
   }
@@ -166,7 +141,7 @@ class NugetVersioningApi implements VersioningApi {
     const r = parseRange(range);
     if (r) {
       let result: string | null = null;
-      let vMax: NugetVersion | undefined;
+      let vMax: DotnetSdkVersion | undefined;
       for (const version of versions) {
         const v = parseVersion(version);
         if (!v) {
@@ -189,7 +164,7 @@ class NugetVersioningApi implements VersioningApi {
     const u = parseVersion(range);
     if (u) {
       let result: string | null = null;
-      let vMax: NugetVersion | undefined;
+      let vMax: DotnetSdkVersion | undefined;
       for (const version of versions) {
         const v = parseVersion(version);
         if (!v) {
@@ -216,7 +191,7 @@ class NugetVersioningApi implements VersioningApi {
     const r = parseRange(range);
     if (r) {
       let result: string | null = null;
-      let vMin: NugetVersion | undefined;
+      let vMin: DotnetSdkVersion | undefined;
       for (const version of versions) {
         const v = parseVersion(version);
         if (!v) {
@@ -239,7 +214,7 @@ class NugetVersioningApi implements VersioningApi {
     const u = parseVersion(range);
     if (u) {
       let result: string | null = null;
-      let vMin: NugetVersion | undefined;
+      let vMin: DotnetSdkVersion | undefined;
       for (const version of versions) {
         const v = parseVersion(version);
         if (!v) {
@@ -274,7 +249,7 @@ class NugetVersioningApi implements VersioningApi {
     }
 
     if (rangeStrategy === 'pin') {
-      return rangeToString({ type: 'nuget-exact-range', version: v });
+      return versionToString(v);
     }
 
     if (this.isVersion(currentValue)) {
@@ -290,61 +265,36 @@ class NugetVersioningApi implements VersioningApi {
       return currentValue;
     }
 
-    if (r.type === 'nuget-exact-range') {
-      return rangeToString({ type: 'nuget-exact-range', version: v });
+    const floating = r.floating;
+    if (!floating) {
+      return versionToString(v);
     }
 
-    if (r.type === 'nuget-floating-range') {
-      const floating = r.floating;
-      if (!floating) {
-        return versionToString(v);
-      }
+    const res: DotnetSdkFloatingRange = { ...r };
 
-      const res: NugetFloatingRange = { ...r };
+    if (floating === 'major') {
+      res.major = coerceFloatingComponent(v.major);
+      return tryBump(res, v, currentValue);
+    }
+    res.major = v.major;
 
-      if (floating === 'major') {
-        res.major = coerceFloatingComponent(v.major);
-        return tryBump(res, v, currentValue);
-      }
-      res.major = v.major;
+    if (floating === 'minor') {
+      res.minor = coerceFloatingComponent(v.minor);
+      return tryBump(res, v, currentValue);
+    }
+    res.minor = v.minor ?? 0;
 
-      if (floating === 'minor') {
-        res.minor = coerceFloatingComponent(v.minor);
-        return tryBump(res, v, currentValue);
-      }
-      res.minor = v.minor ?? 0;
-
-      if (floating === 'patch') {
-        res.patch = coerceFloatingComponent(v.patch);
-        return tryBump(res, v, currentValue);
-      }
-      res.patch = v.patch ?? 0;
-
-      res.revision = coerceFloatingComponent(v.revision);
+    if (floating === 'patch') {
+      res.patch = coerceFloatingComponent(v.patch);
       return tryBump(res, v, currentValue);
     }
 
-    const res: NugetBracketRange = { ...r };
-
-    if (!r.max) {
-      res.min = v;
-      res.minInclusive = true;
-      return rangeToString(res);
+    res.patch = v.patch ?? 0;
+    if (v.prerelease) {
+      res.prerelease = v.prerelease;
     }
 
-    if (matches(v, r)) {
-      return currentValue;
-    }
-
-    if (!r.min) {
-      res.max = v;
-      res.maxInclusive = true;
-      return rangeToString(res);
-    }
-
-    res.max = v;
-    res.maxInclusive = true;
-    return rangeToString(res);
+    return tryBump(res, v, currentValue);
   }
 
   sortVersions(version: string, other: string): number {
