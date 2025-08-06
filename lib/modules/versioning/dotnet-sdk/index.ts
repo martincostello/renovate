@@ -9,13 +9,13 @@ import {
 import type { DotnetSdkFloatingRange, DotnetSdkVersion } from './types';
 import { compare, versionToString } from './version';
 
-export const id = 'nuget';
-export const displayName = 'NuGet';
+export const id = 'dotnet-sdk';
+export const displayName = '.NET SDK';
 export const urls = ['https://learn.microsoft.com/dotnet/core/versions/'];
-export const supportsRanges = true;
+export const supportsRanges = false;
 export const supportedRangeStrategies = ['pin', 'bump'];
 
-class NugetVersioningApi implements VersioningApi {
+class DotnetSdkVersioningApi implements VersioningApi {
   isCompatible(version: string, _current?: string): boolean {
     return this.isValid(version);
   }
@@ -327,6 +327,6 @@ class NugetVersioningApi implements VersioningApi {
   }
 }
 
-export const api: VersioningApi = new NugetVersioningApi();
+export const api: VersioningApi = new DotnetSdkVersioningApi();
 
 export default api;
