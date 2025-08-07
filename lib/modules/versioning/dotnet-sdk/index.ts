@@ -1,11 +1,6 @@
 import type { NewValueConfig, VersioningApi } from '../types';
 import { parseRange, parseVersion } from './parser';
-import {
-  coerceFloatingComponent,
-  getFloatingRangeLowerBound,
-  matches,
-  tryBump,
-} from './range';
+import { getFloatingRangeLowerBound, matches, tryBump } from './range';
 import type { DotnetSdkFloatingRange, DotnetSdkVersion } from './types';
 import { compare, versionToString } from './version';
 
@@ -252,12 +247,11 @@ class DotnetSdkVersioningApi implements VersioningApi {
       return versionToString(v);
     }
 
-    if (this.isVersion(currentValue)) {
-      return newVersion;
-    }
-
     const r = parseRange(currentValue);
     if (!r) {
+      if (this.isVersion(currentValue)) {
+        return newVersion;
+      }
       return null;
     }
 
@@ -273,23 +267,23 @@ class DotnetSdkVersioningApi implements VersioningApi {
     const res: DotnetSdkFloatingRange = { ...r };
 
     if (floating === 'major') {
-      res.major = coerceFloatingComponent(v.major);
+      res.major = v.major;
       return tryBump(res, v, currentValue);
     }
     res.major = v.major;
 
     if (floating === 'minor') {
-      res.minor = coerceFloatingComponent(v.minor);
+      res.minor = v.minor;
       return tryBump(res, v, currentValue);
     }
     res.minor = v.minor ?? 0;
 
     if (floating === 'patch') {
-      res.patch = coerceFloatingComponent(v.patch);
+      res.patch = v.patch;
       return tryBump(res, v, currentValue);
     }
 
-    res.patch = v.patch ?? 0;
+    res.patch = v.patch ?? 100;
     if (v.prerelease) {
       res.prerelease = v.prerelease;
     }

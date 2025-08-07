@@ -11,7 +11,7 @@ export function getFloatingRangeLowerBound(
   const res: DotnetSdkVersion = {
     type: 'dotnet-sdk-version',
     major,
-    minor,
+    minor: minor === 'x' ? 0 : minor,
     patch,
   };
 
@@ -28,32 +28,39 @@ export function matches(v: DotnetSdkVersion, r: DotnetSdkRange): boolean {
   } else if (r.floating === 'minor') {
     return v.major === r.major && (v.minor ?? 0) === (r.minor ?? 0);
   } else {
+    const patch = r.patch === 'x' || !r.patch ? 100 : r.patch;
     return (
       v.major === r.major &&
       v.minor === r.minor &&
-      Math.floor((v.patch ?? 100) / 100) === Math.floor((r.patch ?? 100) / 100)
+      Math.floor((v.patch ?? 100) / 100) === Math.floor(patch / 100)
     );
   }
-}
-
-export function coerceFloatingComponent(component: number | undefined): number {
-  return component ? Math.floor(component / 10) * 10 : 0;
 }
 
 export function rangeToString(range: DotnetSdkRange): string {
   const { major, minor, patch, floating } = range;
 
   if (floating === 'major') {
-    return `${major}.x`;
+    if (minor === 'x') {
+      return `${major}.x`;
+    }
+    return `${major}`;
   }
 
   if (floating === 'minor') {
-    return `${major}.${minor ?? 0}.x`;
+    if (patch !== undefined) {
+      return `${major}.0.x`;
+    }
+    return `${major}.${minor}`;
   }
 
-  const featureBand = (patch ?? 100) / 100;
+  if (patch === undefined || patch === 'x') {
+    return `${major}.${minor}.x`;
+  }
 
-  return `${major}.${minor ?? 0}.${featureBand}xx`;
+  const featureBand = Math.floor((patch ?? 100) / 100);
+
+  return `${major}.${minor}.${featureBand}xx`;
 }
 
 export function tryBump(

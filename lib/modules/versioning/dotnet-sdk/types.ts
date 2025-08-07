@@ -20,8 +20,8 @@ export interface DotnetSdkVersion {
 export interface DotnetSdkFloatingRange {
   type: 'dotnet-sdk-floating-range';
   major: number;
-  minor?: number;
-  patch?: number;
+  minor?: number | 'x';
+  patch?: number | 'x';
   floating?: 'major' | 'minor' | 'patch';
   prerelease?: string;
 }

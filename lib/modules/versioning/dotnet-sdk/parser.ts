@@ -46,11 +46,14 @@ const floatingRangeRegex = regEx(
   /^(?:(?<floating_major>\d+(?:\.x)?)|(?<major>\d+)\.(?:(?<floating_minor>0(?:\.x)?)|(?<minor>\d+)\.(?:(?<floating_patch>\d{1,3}xx)|(?<patch>\d+))))(-(?<prerelease>[a-zA-Z0-9.]+))?$/,
 );
 
-function parseFloatingComponent(input: string): number {
-  if (!input || input === 'x') {
-    return 0;
+function parseFloatingComponent(input: string): [number, undefined | 'x'] {
+  const parts = input.split('.');
+  const first = Number.parseInt(parts[0], 10);
+  let second: undefined | 'x' = undefined;
+  if (parts.length > 1 && parts[1] === 'x') {
+    second = 'x';
   }
-  return Number.parseInt(input, 10);
+  return [first, second];
 }
 
 export function parseFloatingRange(
@@ -89,9 +92,11 @@ export function parseFloatingRange(
   }
 
   if (floating_major) {
+    const [major, minor] = parseFloatingComponent(floating_major);
     return {
       ...res,
-      major: parseFloatingComponent(floating_major),
+      major,
+      minor,
       floating: 'major',
     };
   }
@@ -102,9 +107,11 @@ export function parseFloatingRange(
   }
 
   if (floating_minor) {
+    const [minor, patch] = parseFloatingComponent(floating_minor);
     return {
       ...res,
-      minor: parseFloatingComponent(floating_minor),
+      minor,
+      patch,
       floating: 'minor',
     };
   }
@@ -115,9 +122,10 @@ export function parseFloatingRange(
   }
 
   if (floating_patch) {
+    const [patch] = parseFloatingComponent(floating_patch);
     return {
       ...res,
-      patch: parseFloatingComponent(floating_patch) * 100,
+      patch: patch * 100,
       floating: 'patch',
     };
   }

@@ -31,15 +31,15 @@ describe('modules/versioning/dotnet-sdk/parser', () => {
     test.each`
       input         | major | minor        | patch        | floating   | prerelease
       ${'8'}        | ${8}  | ${undefined} | ${undefined} | ${'major'} | ${undefined}
-      ${'8.x'}      | ${8}  | ${undefined} | ${undefined} | ${'major'} | ${undefined}
+      ${'8.x'}      | ${8}  | ${'x'}       | ${undefined} | ${'major'} | ${undefined}
       ${'8.0'}      | ${8}  | ${0}         | ${undefined} | ${'minor'} | ${undefined}
-      ${'8.0.x'}    | ${8}  | ${0}         | ${undefined} | ${'minor'} | ${undefined}
+      ${'8.0.x'}    | ${8}  | ${0}         | ${'x'}       | ${'minor'} | ${undefined}
       ${'8.0.1xx'}  | ${8}  | ${0}         | ${100}       | ${'patch'} | ${undefined}
       ${'8.0.3xx'}  | ${8}  | ${0}         | ${300}       | ${'patch'} | ${undefined}
       ${'10'}       | ${10} | ${undefined} | ${undefined} | ${'major'} | ${undefined}
-      ${'10.x'}     | ${10} | ${undefined} | ${undefined} | ${'major'} | ${undefined}
+      ${'10.x'}     | ${10} | ${'x'}       | ${undefined} | ${'major'} | ${undefined}
       ${'10.0'}     | ${10} | ${0}         | ${undefined} | ${'minor'} | ${undefined}
-      ${'10.0.x'}   | ${10} | ${0}         | ${undefined} | ${'minor'} | ${undefined}
+      ${'10.0.x'}   | ${10} | ${0}         | ${'x'}       | ${'minor'} | ${undefined}
       ${'10.0.1xx'} | ${10} | ${0}         | ${100}       | ${'patch'} | ${undefined}
       ${'10.0.3xx'} | ${10} | ${0}         | ${300}       | ${'patch'} | ${undefined}
     `('$input', ({ input, major, minor, patch, floating, prerelease }) => {
@@ -58,7 +58,7 @@ describe('modules/versioning/dotnet-sdk/parser', () => {
     test.each`
       input        | major | minor | patch  | prerelease
       ${'8.x'}     | ${8}  | ${0}  | ${100} | ${undefined}
-      ${'8.0.x'}   | ${8}  | ${0}  | ${100} | ${undefined}
+      ${'8.0.x'}   | ${8}  | ${0}  | ${'x'} | ${undefined}
       ${'8.0.1xx'} | ${8}  | ${0}  | ${100} | ${undefined}
       ${'8.0.3xx'} | ${8}  | ${0}  | ${300} | ${undefined}
     `('$input', ({ input, major, minor, patch, prerelease }) => {
@@ -91,7 +91,9 @@ describe('modules/versioning/dotnet-sdk/parser', () => {
   describe('rangeToString', () => {
     test.each`
       version
+      ${'8'}
       ${'8.x'}
+      ${'8.0'}
       ${'8.0.x'}
       ${'8.0.1xx'}
       ${'8.0.3xx'}
