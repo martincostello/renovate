@@ -12,7 +12,7 @@ export function getFloatingRangeLowerBound(
     type: 'dotnet-sdk-version',
     major,
     minor: minor === 'x' ? 0 : minor,
-    patch,
+    patch: patch === 'x' ? 100 : patch,
   };
 
   if (prerelease) {
