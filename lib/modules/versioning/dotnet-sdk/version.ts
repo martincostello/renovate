@@ -42,8 +42,8 @@ export function compare(x: DotnetSdkVersion, y: DotnetSdkVersion): number {
   const xMinor = x.minor ?? 0;
   const yMinor = y.minor ?? 0;
 
-  const xPatch = x.patch ?? 0;
-  const yPatch = y.patch ?? 0;
+  const xPatch = x.patch ?? 100;
+  const yPatch = y.patch ?? 100;
 
   if (xMajor !== yMajor) {
     return Math.sign(xMajor - yMajor);

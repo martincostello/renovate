@@ -29,6 +29,8 @@ export function matches(v: DotnetSdkVersion, r: DotnetSdkRange): boolean {
     return v.major === r.major && (v.minor ?? 0) === (r.minor ?? 0);
   } else {
     return (
+      v.major === r.major &&
+      v.minor === r.minor &&
       Math.floor((v.patch ?? 100) / 100) === Math.floor((r.patch ?? 100) / 100)
     );
   }
