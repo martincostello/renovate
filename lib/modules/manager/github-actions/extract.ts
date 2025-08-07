@@ -209,14 +209,18 @@ function extractSteps(
         const fieldName = `${action}-version`;
         const currentValue = step.with?.[fieldName];
         if (currentValue) {
-          deps.push({
-            datasource: datasource ?? GithubReleasesDatasource.id,
-            depName: action,
-            packageName: packageName ?? `actions/${action}-versions`,
-            versioning,
-            extractVersion: '^(?<version>\\d+\\.\\d+\\.\\d+)(-\\d+)?$', // Actions release tags are like 1.24.1-13667719799
-            currentValue,
-            depType: 'uses-with',
+          currentValue.split(newlineRegex).forEach((value) => {
+            if (value) {
+              deps.push({
+                datasource: datasource ?? GithubReleasesDatasource.id,
+                depName: action,
+                packageName: packageName ?? `actions/${action}-versions`,
+                versioning,
+                extractVersion: '^(?<version>\\d+\\.\\d+\\.\\d+)(-\\d+)?$', // Actions release tags are like 1.24.1-13667719799
+                currentValue: value,
+                depType: 'uses-with',
+              });
+            }
           });
         }
       }
