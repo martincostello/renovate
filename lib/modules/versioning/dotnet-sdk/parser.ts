@@ -50,7 +50,7 @@ function parseFloatingComponent(input: string): number {
   if (!input || input === 'x') {
     return 0;
   }
-  return Number.parseInt(input[0], 10);
+  return Number.parseInt(input, 10);
 }
 
 export function parseFloatingRange(

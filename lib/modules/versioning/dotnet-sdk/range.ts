@@ -3,12 +3,11 @@ import type {
   DotnetSdkRange,
   DotnetSdkVersion,
 } from './types';
-import { compare, versionToString } from './version';
 
 export function getFloatingRangeLowerBound(
   range: DotnetSdkFloatingRange,
 ): DotnetSdkVersion {
-  const { major, minor = 0, patch = 0, prerelease } = range;
+  const { major, minor = 0, patch = 100, prerelease } = range;
   const res: DotnetSdkVersion = {
     type: 'dotnet-sdk-version',
     major,
@@ -24,16 +23,15 @@ export function getFloatingRangeLowerBound(
 }
 
 export function matches(v: DotnetSdkVersion, r: DotnetSdkRange): boolean {
-  if (r.type === 'dotnet-sdk-exact-range') {
-    return compare(v, r.version) === 0;
+  if (r.floating === 'major') {
+    return v.major === r.major;
+  } else if (r.floating === 'minor') {
+    return v.major === r.major && (v.minor ?? 0) === (r.minor ?? 0);
+  } else {
+    return (
+      Math.floor((v.patch ?? 100) / 100) === Math.floor((r.patch ?? 100) / 100)
+    );
   }
-
-  if (!r.prerelease && v.prerelease) {
-    return false;
-  }
-
-  const lowerBound = getFloatingRangeLowerBound(r);
-  return compare(v, lowerBound) >= 0;
 }
 
 export function coerceFloatingComponent(component: number | undefined): number {
@@ -41,10 +39,6 @@ export function coerceFloatingComponent(component: number | undefined): number {
 }
 
 export function rangeToString(range: DotnetSdkRange): string {
-  if (range.type === 'dotnet-sdk-exact-range') {
-    return versionToString(range.version);
-  }
-
   const { major, minor, patch, floating } = range;
 
   if (floating === 'major') {

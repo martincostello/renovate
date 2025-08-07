@@ -313,14 +313,13 @@ class DotnetSdkVersioningApi implements VersioningApi {
       return false;
     }
 
-    const u = parseVersion(range);
-    if (u) {
-      return compare(v, u) >= 0;
-    }
-
     const r = parseRange(range);
     if (!r) {
-      return false;
+      const u = parseVersion(range);
+      if (!u) {
+        return false;
+      }
+      return compare(v, u) >= 0;
     }
 
     return matches(v, r);
