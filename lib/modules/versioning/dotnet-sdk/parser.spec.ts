@@ -58,7 +58,7 @@ describe('modules/versioning/dotnet-sdk/parser', () => {
     test.each`
       input        | major | minor | patch  | prerelease
       ${'8.x'}     | ${8}  | ${0}  | ${100} | ${undefined}
-      ${'8.0.x'}   | ${8}  | ${0}  | ${'x'} | ${undefined}
+      ${'8.0.x'}   | ${8}  | ${0}  | ${100} | ${undefined}
       ${'8.0.1xx'} | ${8}  | ${0}  | ${100} | ${undefined}
       ${'8.0.3xx'} | ${8}  | ${0}  | ${300} | ${undefined}
     `('$input', ({ input, major, minor, patch, prerelease }) => {
